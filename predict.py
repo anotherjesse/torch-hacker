@@ -15,6 +15,7 @@ class Predictor(BasePredictor):
     def start_inner(self):
         if self.inner:
             self.inner.terminate()
+            time.sleep(1)
 
         os.environ["PORT"] = "5001"
         self.inner = subprocess.Popen(
@@ -41,19 +42,19 @@ class Predictor(BasePredictor):
         
         changes = False
 
-        if pip is not None:
-            deps = pip.split(" ")
-            print("installing pip deps", deps)
-            subprocess.run(["pip", "install", *deps], check=True)
-            changes = True
-
         if apt is not None:
             deps = apt.split(" ")
             print("installing apt deps", deps)
             subprocess.run(["apt-get", "update"], check=True)
             subprocess.run(["apt-get", "install", "-y", *deps], check=True)
             changes = True
-        
+
+        if pip is not None:
+            deps = pip.split(" ")
+            print("installing pip deps", deps)
+            subprocess.run(["pip", "install", *deps], check=True)
+            changes = True
+
         if code is not None:
             print("updating code")
             with open("/src/app/predict.py", "w") as f:
