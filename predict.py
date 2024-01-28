@@ -6,11 +6,13 @@ import requests
 import atexit
 import signal
 import time
+import re
+import base64
+import mimetypes
 
 class Predictor(BasePredictor):
     def setup(self) -> None:
         self.inner = None
-        self.start_inner()
 
     def start_inner(self):
         if self.inner:
@@ -37,7 +39,7 @@ class Predictor(BasePredictor):
         apt: str = Input(description="apt deps to install", default=None),
         code: str = Input(description="Code to run", default=None),
         inputs: str = Input(description="json to parse for inputs", default="{}"),
-    ) -> str:
+    ) -> Path:
         # Check if the internal server is running
         
         changes = False
@@ -61,7 +63,7 @@ class Predictor(BasePredictor):
                 f.write(code)
             changes = True
 
-        if changes:
+        if changes or self.inner is None:
             print("changes made, restarting server")
             self.start_inner()
 
@@ -84,12 +86,39 @@ class Predictor(BasePredictor):
 
         try:
             print("sending request")
-            rv = requests.post("http://localhost:5001/predictions", json=inputs)
+            r = requests.post("http://localhost:5001/predictions", json=inputs)
             print("sent request")
-            return rv.text
+            rv = r.json()
+            if rv['status'] == 'succeeded':
+                fn = write_data_uri_to_file(rv['output'], '/src/output')
+                return Path(fn)
+            else:
+                return rv['error']
         except requests.RequestException as e:
             # Handle exceptions
             return str(e)
+
+def write_data_uri_to_file(data_uri, file_path):
+    # Extract the MIME type and the base64 data from the data URI
+    match = re.match(r"data:([^;]+);base64,(.*)", data_uri)
+    if not match:
+        raise ValueError("Invalid data URI")
+
+    mime_type, base64_data = match.groups()
+    extension = mimetypes.guess_extension(mime_type)
+
+    # Handle edge cases where the extension may not be correctly guessed
+    if not extension:
+        raise ValueError("Could not determine file extension from MIME type")
+
+    # Decode the base64 data
+    binary_data = base64.b64decode(base64_data)
+
+    # Write the data to a file
+    with open(f"{file_path}{extension}", "wb") as file:
+        file.write(binary_data)
+    
+    return f"{file_path}{extension}"
 
 
 print("outer")
