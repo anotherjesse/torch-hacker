@@ -1,4 +1,5 @@
-from cog import BasePredictor, Input, Path
+from cog import BasePredictor, Input, Path, BaseModel
+from typing import Optional
 import json
 import os
 import subprocess
@@ -9,6 +10,10 @@ import time
 import re
 import base64
 import mimetypes
+
+class Output(BaseModel):
+    file: Optional[Path]
+    text: Optional[str]
 
 
 class Predictor(BasePredictor):
@@ -40,7 +45,7 @@ class Predictor(BasePredictor):
         apt: str = Input(description="apt deps to install", default=None),
         code: str = Input(description="Code to run", default=None),
         inputs: str = Input(description="json to parse for inputs", default="{}"),
-    ) -> Path:
+    ) -> Output:
         changes = False
 
         if install_apts(apt):
@@ -83,8 +88,11 @@ class Predictor(BasePredictor):
             print("sent request")
             rv = r.json()
             if rv["status"] == "succeeded":
-                fn = write_data_uri_to_file(rv["output"], "/src/output")
-                return Path(fn)
+                try:
+                    fn = write_data_uri_to_file(rv["output"], "/src/output")
+                    return Output(file = Path(fn))
+                except ValueError as e:
+                    return Output(text = rv["output"])
             else:
                 return rv["error"]
         except requests.RequestException as e:

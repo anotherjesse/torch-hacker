@@ -9,10 +9,7 @@ class Predictor(BasePredictor):
 
     def predict(
         self,
-    ) -> Path:
-        with open('output.txt', 'w') as f:
-            f.write("torch cuda is available: " + str(torch.cuda.is_available()) + "\n")
-        
-        return Path("output.txt")
+    ) -> str:
+        return "torch cuda is available: " + str(torch.cuda.is_available())
     
 print("inner")
