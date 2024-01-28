@@ -96,7 +96,12 @@ def install_apts(deps):
     if deps is None:
         return False
     
+    deps = deps.strip()
+    if len(deps) == 0:
+        return False
+    
     deps = deps.split(" ")
+    
     print("installing apt deps", deps)
     
     subprocess.run(["apt-get", "update"], check=True)
@@ -115,6 +120,10 @@ def install_apts(deps):
 
 def install_pips(deps):
     if deps is None:
+        return False
+    
+    deps = deps.strip()
+    if len(deps) == 0:
         return False
     
     deps = deps.split(" ")
