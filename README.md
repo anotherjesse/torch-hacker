@@ -26,10 +26,12 @@ exploring how to make models that are fast and easily to use on:
 - [ ] codeformer
 - [ ] esrgan
 - [ ] gfpgan
+- [ ] LCM
 - [ ] llava
 - [ ] moondream
 - [ ] photomaker
 - [ ] instant-id
+- [ ] i2vgen-xl
 - [ ] siglip
 - [ ] SVD
 - [ ] whisper
