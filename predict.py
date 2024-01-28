@@ -86,7 +86,7 @@ class Predictor(BasePredictor):
 
         try:
             print("sending request")
-            r = requests.post("http://localhost:5001/predictions", json=inputs)
+            r = requests.post("http://localhost:5001/predictions", json={"input": inputs})
             print("sent request")
             rv = r.json()
             if rv['status'] == 'succeeded':
