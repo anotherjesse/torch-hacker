@@ -4,6 +4,7 @@ import sys
 import yaml
 from pathlib import Path
 import glob
+import os
 import replicate
 
 def run(**kwargs):
@@ -32,6 +33,11 @@ def run_model(model_dir, r8_model_and_version=None):
     predictor = cog['predict'].split(':')[0]
     code = open(model_dir / predictor).read()
 
+    if os.path.exists(model_dir / "README.md"):
+        description = open(model_dir / "README.md").read()
+    else:
+        description = str(model_dir)
+
     sample_dir = model_dir / "samples" / "*.json"
     print(sample_dir)
     for sample in glob.glob(str(sample_dir)):
@@ -44,6 +50,7 @@ def run_model(model_dir, r8_model_and_version=None):
             output = run(inputs=inputs, code=code, pip=pip, apt=apt)
         else:
             output = replicate.run(r8_model_and_version, input={
+                "description": description,
                 "inputs": inputs,
                 "code": code,
                 "pip": pip,

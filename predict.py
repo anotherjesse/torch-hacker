@@ -41,6 +41,7 @@ class Predictor(BasePredictor):
 
     def predict(
         self,
+        description: str = Input(description="describe this code/experiment", default=""),
         pip: str = Input(description="python deps to install", default=None),
         apt: str = Input(description="apt deps to install", default=None),
         code: str = Input(description="Code to run", default=None),
