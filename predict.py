@@ -11,6 +11,7 @@ import re
 import base64
 import mimetypes
 
+
 class Output(BaseModel):
     file: Optional[Path]
     text: Optional[str]
@@ -41,7 +42,9 @@ class Predictor(BasePredictor):
 
     def predict(
         self,
-        description: str = Input(description="describe this code/experiment", default=""),
+        description: str = Input(
+            description="describe this code/experiment", default=""
+        ),
         pip: str = Input(description="python deps to install", default=None),
         apt: str = Input(description="apt deps to install", default=None),
         code: str = Input(description="Code to run", default=None),
@@ -91,9 +94,9 @@ class Predictor(BasePredictor):
             if rv["status"] == "succeeded":
                 try:
                     fn = write_data_uri_to_file(rv["output"], "/src/output")
-                    return Output(file = Path(fn))
+                    return Output(file=Path(fn))
                 except ValueError as e:
-                    return Output(text = rv["output"])
+                    return Output(text=rv["output"])
             else:
                 return rv["error"]
         except requests.RequestException as e:
@@ -104,37 +107,35 @@ class Predictor(BasePredictor):
 def install_apts(deps):
     if deps is None:
         return False
-    
+
     deps = deps.strip()
     if len(deps) == 0:
         return False
-    
+
     deps = deps.split(" ")
-    
+
     print("installing apt deps", deps)
-    
+
     subprocess.run(["apt-get", "update"], check=True)
     result = subprocess.run(
         ["apt-get", "install", "-y", *deps], capture_output=True, text=True, check=True
     )
-    if "newly installed" in result.stdout or "upgraded" in result.stdout:
-        print("Changes made in apt packages.")
-        print("pip freeze:")
-        subprocess.run(["pip", "freeze"], check=True)
-        return True
-    else:
+    if "0 newly installed" in result.stdout and "0 upgraded" in result.stdout:
         print("No changes made in apt packages.")
         return False
+    else:
+        print("Changes made in apt packages.")
+        return True
 
 
 def install_pips(deps):
     if deps is None:
         return False
-    
+
     deps = deps.strip()
     if len(deps) == 0:
         return False
-    
+
     deps = deps.split(" ")
 
     print("installing pip deps", deps)
@@ -150,6 +151,8 @@ def install_pips(deps):
         ]
     ):
         print("Changes made in pip packages.")
+        print("pip freeze:")
+        subprocess.run(["pip", "freeze"], check=True)
         return True
     else:
         print("No changes made in pip packages.")
@@ -159,7 +162,7 @@ def install_pips(deps):
 def update_code(code):
     if code is None:
         return False
-    
+
     if (
         os.path.exists("/src/app/predict.py")
         and open("/src/app/predict.py").read() == code
