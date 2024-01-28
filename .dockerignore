@@ -17,5 +17,5 @@ __pycache__
 /venv
 
 # exclude model stuff
-*.jpg
-/models
+# *.jpg
+# /models
