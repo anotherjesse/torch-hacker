@@ -12,7 +12,7 @@ exploring how to make models that are fast and easily to use on:
 ## todo
 
 - [ ] how to use use on macos
-- [ ] support file inputs (whisper, llava, etc)
+- [x] support Path inputs (whisper, llava, etc) -- seems to be kinda working (at least with https based "Paths")
 - [ ] how to "compile" an optimized cog on replicate
 - [ ] support models that leverage github code bases (example [moondream](https://github.com/vikhyat/moondream))
 - [ ] "vibe" tests for input/outputs?
@@ -32,6 +32,11 @@ exploring how to make models that are fast and easily to use on:
 - [ ] photomaker
 - [ ] instant-id
 - [ ] i2vgen-xl
+- [x] phi-2
 - [ ] siglip
+- [x] SD1.5
+- [x] SD1.5 img2img
+- [x] SDXL
+- [ ] styletts2
 - [ ] SVD
-- [ ] whisper
+- [x] whisper-v3-large
