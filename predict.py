@@ -10,6 +10,7 @@ import re
 import base64
 import mimetypes
 
+
 class Predictor(BasePredictor):
     def setup(self) -> None:
         self.inner = None
@@ -40,27 +41,15 @@ class Predictor(BasePredictor):
         code: str = Input(description="Code to run", default=None),
         inputs: str = Input(description="json to parse for inputs", default="{}"),
     ) -> Path:
-        # Check if the internal server is running
-        
         changes = False
 
-        if apt is not None:
-            deps = apt.split(" ")
-            print("installing apt deps", deps)
-            subprocess.run(["apt-get", "update"], check=True)
-            subprocess.run(["apt-get", "install", "-y", *deps], check=True)
+        if install_apts(apt):
             changes = True
 
-        if pip is not None:
-            deps = pip.split(" ")
-            print("installing pip deps", deps)
-            subprocess.run(["pip", "install", *deps], check=True)
+        if install_pips(pip):
             changes = True
 
-        if code is not None:
-            print("updating code")
-            with open("/src/app/predict.py", "w") as f:
-                f.write(code)
+        if update_code(code):
             changes = True
 
         if changes or self.inner is None:
@@ -72,13 +61,15 @@ class Predictor(BasePredictor):
         while True:
             if self.inner.poll() is not None:
                 # The process has terminated, handle accordingly
+                self.inner = None
                 return "Internal server is not running."
 
             try:
                 rv = requests.get("http://localhost:5001/health-check")
                 state = rv.json()
-                if state['status'] == 'READY':
+                if state["status"] == "READY":
                     break
+                print("not ready yet, state:", state)
             except requests.RequestException as e:
                 print("nothing listening on 5001")
 
@@ -86,17 +77,83 @@ class Predictor(BasePredictor):
 
         try:
             print("sending request")
-            r = requests.post("http://localhost:5001/predictions", json={"input": inputs})
+            r = requests.post(
+                "http://localhost:5001/predictions", json={"input": inputs}
+            )
             print("sent request")
             rv = r.json()
-            if rv['status'] == 'succeeded':
-                fn = write_data_uri_to_file(rv['output'], '/src/output')
+            if rv["status"] == "succeeded":
+                fn = write_data_uri_to_file(rv["output"], "/src/output")
                 return Path(fn)
             else:
-                return rv['error']
+                return rv["error"]
         except requests.RequestException as e:
             # Handle exceptions
             return str(e)
+
+
+def install_apts(deps):
+    if deps is None:
+        return False
+    
+    deps = deps.split(" ")
+    print("installing apt deps", deps)
+    
+    subprocess.run(["apt-get", "update"], check=True)
+    result = subprocess.run(
+        ["apt-get", "install", "-y", *deps], capture_output=True, text=True, check=True
+    )
+    if "newly installed" in result.stdout or "upgraded" in result.stdout:
+        print("Changes made in apt packages.")
+        print("pip freeze:")
+        subprocess.run(["pip", "freeze"], check=True)
+        return True
+    else:
+        print("No changes made in apt packages.")
+        return False
+
+
+def install_pips(deps):
+    if deps is None:
+        return False
+    
+    deps = deps.split(" ")
+
+    print("installing pip deps", deps)
+    result = subprocess.run(
+        ["pip", "install", *deps], capture_output=True, text=True, check=True
+    )
+    if any(
+        keyword in result.stdout
+        for keyword in [
+            "Successfully installed",
+            "Successfully uninstalled",
+            "Upgraded",
+        ]
+    ):
+        print("Changes made in pip packages.")
+        return True
+    else:
+        print("No changes made in pip packages.")
+        return False
+
+
+def update_code(code):
+    if code is None:
+        return False
+    
+    if (
+        os.path.exists("/src/app/predict.py")
+        and open("/src/app/predict.py").read() == code
+    ):
+        print("no changes made")
+        return False
+
+    with open("/src/app/predict.py", "w") as f:
+        f.write(code)
+    print("updated code")
+    return True
+
 
 def write_data_uri_to_file(data_uri, file_path):
     # Extract the MIME type and the base64 data from the data URI
@@ -117,7 +174,7 @@ def write_data_uri_to_file(data_uri, file_path):
     # Write the data to a file
     with open(f"{file_path}{extension}", "wb") as file:
         file.write(binary_data)
-    
+
     return f"{file_path}{extension}"
 
 
