@@ -6,6 +6,7 @@ build:
   python_packages:
    - "torch==2.1.1"
    - "transformers"
+   - "accelerate"
 
   system_packages:
    - "ffmpeg"
