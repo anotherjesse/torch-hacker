@@ -39,6 +39,7 @@ PORT=4999 python sample.py models/phi2
 ## todo
 
 - [ ] put the inner model in its own virtualenv? (especially for macos, but perhaps for replicate too)
+- [ ] test the brew/apt mapping/installer on macos
 - [x] support Path inputs (whisper, llava, etc) -- seems to be kinda working (at least with https based "Paths")
 - [ ] how to "compile" an optimized cog on replicate
 - [ ] support models that leverage github code bases (example [moondream](https://github.com/vikhyat/moondream))

@@ -10,6 +10,7 @@ import time
 import re
 import base64
 import mimetypes
+import deps
 
 
 class Output(BaseModel):
@@ -58,10 +59,10 @@ class Predictor(BasePredictor):
     ) -> Output:
         changes = False
 
-        if install_apts(apt):
+        if deps.install_apts(apt):
             changes = True
 
-        if install_pips(pip):
+        if deps.install_pips(pip):
             changes = True
 
         if update_code(code):
@@ -108,61 +109,6 @@ class Predictor(BasePredictor):
         except requests.RequestException as e:
             # Handle exceptions
             return str(e)
-
-
-def install_apts(deps):
-    if deps is None:
-        return False
-
-    deps = deps.strip()
-    if len(deps) == 0:
-        return False
-
-    deps = deps.split(" ")
-
-    print("installing apt deps", deps)
-
-    subprocess.run(["apt-get", "update"], check=True)
-    result = subprocess.run(
-        ["apt-get", "install", "-y", *deps], capture_output=True, text=True, check=True
-    )
-    if "0 newly installed" in result.stdout and "0 upgraded" in result.stdout:
-        print("No changes made in apt packages.")
-        return False
-    else:
-        print("Changes made in apt packages.")
-        return True
-
-
-def install_pips(deps):
-    if deps is None:
-        return False
-
-    deps = deps.strip()
-    if len(deps) == 0:
-        return False
-
-    deps = deps.split(" ")
-
-    print("installing pip deps", deps)
-    result = subprocess.run(
-        ["pip", "install", *deps], capture_output=True, text=True, check=True
-    )
-    if any(
-        keyword in result.stdout
-        for keyword in [
-            "Successfully installed",
-            "Successfully uninstalled",
-            "Upgraded",
-        ]
-    ):
-        print("Changes made in pip packages.")
-        print("pip freeze:")
-        subprocess.run(["pip", "freeze"], check=True)
-        return True
-    else:
-        print("No changes made in pip packages.")
-        return False
 
 
 def update_code(code):

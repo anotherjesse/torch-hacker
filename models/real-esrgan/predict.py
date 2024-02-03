@@ -1,6 +1,14 @@
 from PIL import Image
 from RealESRGAN import RealESRGAN
 from cog import BasePredictor, Input, Path
+import torch
+
+
+DEVICE = 'cpu'
+if torch.backends.mps.is_available():
+    DEVICE = 'mps'
+elif torch.cuda.is_available():
+    DEVICE = 'cuda'
 
 
 class Predictor(BasePredictor):
@@ -9,7 +17,7 @@ class Predictor(BasePredictor):
         self.models = {}
 
         for scale in [2, 4, 8]:
-            self.models[scale] = RealESRGAN("cuda", scale=scale)
+            self.models[scale] = RealESRGAN(DEVICE, scale=scale)
             self.models[scale].load_weights(
                 f"weights/RealESRGAN_x{scale}.pth",
             )
