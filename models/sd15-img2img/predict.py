@@ -4,12 +4,19 @@ import torch
 from PIL import Image
 
 
+DEVICE = 'cpu'
+if torch.backends.mps.is_available():
+    DEVICE = 'mps'
+elif torch.cuda.is_available():
+    DEVICE = 'cuda'
+
+
 class Predictor(BasePredictor):
     def setup(self) -> None:
         self.pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
             "runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16
         )
-        self.pipe.to("cuda")
+        self.pipe.to(DEVICE)
 
     def predict(
         self,

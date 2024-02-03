@@ -7,8 +7,10 @@ import glob
 import os
 import replicate
 
+
 def run(**kwargs):
-    r = requests.post("http://localhost:5000/predictions", json={"input": kwargs})
+    port = os.environ.get("PORT", 5000)
+    r = requests.post(f"http://localhost:{port}/predictions", json={"input": kwargs})
     r.raise_for_status()
     rv = r.json()
 

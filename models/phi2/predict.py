@@ -3,15 +3,22 @@ import time
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+DEVICE = 'cpu'
+if torch.backends.mps.is_available():
+    DEVICE = 'mps'
+elif torch.cuda.is_available():
+    DEVICE = 'cuda'
+
 MODEL_NAME = "microsoft/phi-2"
+
 
 class Predictor(BasePredictor):
     def setup(self) -> None:
         """Load the model into memory to make running multiple predictions efficient"""
         start = time.time()
 
-        print("Loading pipeline...")
-        torch.set_default_device("cuda")
+        print("Loading pipeline to device: ", DEVICE)
+        torch.set_default_device(DEVICE)
         self.model = AutoModelForCausalLM.from_pretrained(
             MODEL_NAME,
             torch_dtype="auto",

@@ -7,5 +7,7 @@ build:
    - "torch==2.1.1"
    - "diffusers"
    - "transformers"
+   - "accelerate"
+   - "sentencepiece"
 
 predict: "predict.py:Predictor"

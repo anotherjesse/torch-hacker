@@ -17,6 +17,10 @@ class Output(BaseModel):
     text: Optional[str]
 
 
+base_dir = os.path.dirname(os.path.realpath(__file__))
+app_dir = base_dir + "/app"
+
+
 class Predictor(BasePredictor):
     def setup(self) -> None:
         self.inner = None
@@ -26,10 +30,12 @@ class Predictor(BasePredictor):
             self.inner.terminate()
             time.sleep(1)
 
-        os.environ["PORT"] = "5001"
+        self.inner_port = 4998
+
+        os.environ["PORT"] = str(self.inner_port)
         self.inner = subprocess.Popen(
             ["python", "-m", "cog.server.http"],
-            cwd="/src/app",
+            cwd=app_dir,
         )
         atexit.register(self.cleanup)
         signal.signal(signal.SIGTERM, self.cleanup)
@@ -74,26 +80,26 @@ class Predictor(BasePredictor):
                 return "Internal server is not running."
 
             try:
-                rv = requests.get("http://localhost:5001/health-check")
+                rv = requests.get(f"http://localhost:{self.inner_port}/health-check")
                 state = rv.json()
                 if state["status"] == "READY":
                     break
                 print("not ready yet, state:", state)
             except requests.RequestException as e:
-                print("nothing listening on 5001")
+                print(f"nothing listening on {self.inner_port}")
 
             time.sleep(1)
 
         try:
             print("sending request")
             r = requests.post(
-                "http://localhost:5001/predictions", json={"input": inputs}
+                f"http://localhost:{self.inner_port}/predictions", json={"input": inputs}
             )
             print("sent request")
             rv = r.json()
             if rv["status"] == "succeeded":
                 try:
-                    fn = write_data_uri_to_file(rv["output"], "/src/output")
+                    fn = write_data_uri_to_file(rv["output"], base_dir + "output")
                     return Output(file=Path(fn))
                 except ValueError as e:
                     return Output(text=rv["output"])
@@ -163,14 +169,12 @@ def update_code(code):
     if code is None:
         return False
 
-    if (
-        os.path.exists("/src/app/predict.py")
-        and open("/src/app/predict.py").read() == code
-    ):
+    dest = app_dir + "/predict.py"
+    if os.path.exists(dest) and open(dest).read() == code:
         print("no changes made")
         return False
 
-    with open("/src/app/predict.py", "w") as f:
+    with open(dest, "w") as f:
         f.write(code)
     print("updated code")
     return True

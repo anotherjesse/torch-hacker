@@ -9,9 +9,36 @@ exploring how to make models that are fast and easily to use on:
 
 - [x] outer model that can be used on replicate
 
+### macos usage
+
+1. create a virtual environment with cog installed
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install cog
+```
+
+2. run the outer model
+
+Unfortunately there is already something listening on port 5000, so we need to change the port.
+
+```bash
+PORT=4999 python -m cog.server.http
+```
+
+3. use a model
+
+We can run a prediction with the Phi-2 language model using this command:
+
+```
+PORT=4999 python sample.py models/phi2
+```
+
+
 ## todo
 
-- [ ] how to use use on macos
+- [ ] put the inner model in its own virtualenv? (especially for macos, but perhaps for replicate too)
 - [x] support Path inputs (whisper, llava, etc) -- seems to be kinda working (at least with https based "Paths")
 - [ ] how to "compile" an optimized cog on replicate
 - [ ] support models that leverage github code bases (example [moondream](https://github.com/vikhyat/moondream))

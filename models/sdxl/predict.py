@@ -3,6 +3,13 @@ from diffusers import StableDiffusionXLPipeline
 import torch
 
 
+DEVICE = 'cpu'
+if torch.backends.mps.is_available():
+    DEVICE = 'mps'
+elif torch.cuda.is_available():
+    DEVICE = 'cuda'
+
+
 class Predictor(BasePredictor):
     def setup(self) -> None:
         self.pipeline = StableDiffusionXLPipeline.from_pretrained(
@@ -11,7 +18,7 @@ class Predictor(BasePredictor):
             variant="fp16",
             use_safetensors=True,
             add_watermarker=False,
-        ).to("cuda")
+        ).to(DEVICE)
 
     def predict(
         self,

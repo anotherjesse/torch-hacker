@@ -2,12 +2,18 @@ from cog import BasePredictor, Input, Path
 from diffusers import AutoPipelineForText2Image
 import torch
 
+DEVICE = 'cpu'
+if torch.backends.mps.is_available():
+    DEVICE = 'mps'
+elif torch.cuda.is_available():
+    DEVICE = 'cuda'
+
 
 class Predictor(BasePredictor):
     def setup(self) -> None:
         self.pipe = AutoPipelineForText2Image.from_pretrained(
             "kandinsky-community/kandinsky-3", variant="fp16", torch_dtype=torch.float16
-        ).to("cuda")
+        ).to(DEVICE)
 
     def predict(
         self,

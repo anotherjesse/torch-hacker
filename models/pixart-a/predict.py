@@ -3,11 +3,18 @@ from diffusers import PixArtAlphaPipeline
 import torch
 
 
+DEVICE = 'cpu'
+if torch.backends.mps.is_available():
+    DEVICE = 'mps'
+elif torch.cuda.is_available():
+    DEVICE = 'cuda'
+
+
 class Predictor(BasePredictor):
     def setup(self) -> None:
         self.pipe = PixArtAlphaPipeline.from_pretrained(
             "PixArt-alpha/PixArt-XL-2-1024-MS", torch_dtype=torch.float16
-        ).to("cuda")
+        ).to(DEVICE)
 
     def predict(
         self,
