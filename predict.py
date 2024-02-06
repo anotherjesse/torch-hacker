@@ -34,6 +34,7 @@ class Predictor(BasePredictor):
         self.inner_port = 4998
 
         os.environ["PORT"] = str(self.inner_port)
+        os.environ['HF_HUB_ENABLE_HF_TRANSFER'] = '1'
         self.inner = subprocess.Popen(
             ["python", "-m", "cog.server.http"],
             cwd=app_dir,
