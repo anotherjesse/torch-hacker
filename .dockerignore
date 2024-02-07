@@ -19,3 +19,4 @@ __pycache__
 # exclude model stuff
 # *.jpg
 # /models
+app

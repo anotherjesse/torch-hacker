@@ -11,6 +11,7 @@ import re
 import base64
 import mimetypes
 import deps
+import shutil
 
 
 class Output(BaseModel):
@@ -20,6 +21,8 @@ class Output(BaseModel):
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 app_dir = base_dir + "/app"
+if not os.path.exists(app_dir):
+    os.makedirs(app_dir)
 
 
 class Predictor(BasePredictor):
@@ -32,9 +35,11 @@ class Predictor(BasePredictor):
             time.sleep(1)
 
         self.inner_port = 4998
+        # FIXME(ja): perhaps we can/should delete everything in app_dir / create a virtual env?
+        shutil.copyfile(base_dir + "/inner-cog.yaml", app_dir + "/cog.yaml")
 
         os.environ["PORT"] = str(self.inner_port)
-        os.environ['HF_HUB_ENABLE_HF_TRANSFER'] = '1'
+        os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
         self.inner = subprocess.Popen(
             ["python", "-m", "cog.server.http"],
             cwd=app_dir,
@@ -58,6 +63,7 @@ class Predictor(BasePredictor):
         code: str = Input(description="Code to run", default=None),
         inputs: str = Input(description="json to parse for inputs", default="{}"),
     ) -> Output:
+        start = time.time()
         changes = False
 
         if deps.install_apts(apt):
@@ -92,12 +98,16 @@ class Predictor(BasePredictor):
 
             time.sleep(1)
 
+        print("prep took (installing deps, setup)", time.time() - start, "seconds")
         try:
-            print("sending request")
+            start = time.time()
+            print("running sync predict")
             r = requests.post(
-                f"http://localhost:{self.inner_port}/predictions", json={"input": inputs}
+                f"http://localhost:{self.inner_port}/predictions",
+                json={"input": inputs},
             )
-            print("sent request")
+            print("predict took:", time.time() - start, "seconds")
+
             rv = r.json()
             if rv["status"] == "succeeded":
                 try:
