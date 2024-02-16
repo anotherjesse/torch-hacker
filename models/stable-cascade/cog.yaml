@@ -1,0 +1,12 @@
+build:
+  gpu: true
+
+  python_version: "3.11"
+
+  python_packages:
+   - "torch==2.1.1"
+   - "git+https://github.com/kashif/diffusers.git@wuerstchen-v3"
+   - "transformers"
+   - "accelerate"
+
+predict: "predict.py:Predictor"
