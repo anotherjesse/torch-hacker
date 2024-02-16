@@ -1,0 +1,17 @@
+build:
+  gpu: true
+
+  python_version: "3.11"
+  system_packages:
+    - "libgl1-mesa-glx"
+
+  python_packages:
+    - "torch==2.1.1"
+    - "diffusers"
+    - "transformers"
+    - "accelerate"
+    - "Pillow"
+    - "huggingface-hub"
+    - "git+https://github.com/sberbank-ai/Real-ESRGAN.git"
+
+predict: "predict.py:Predictor"
