@@ -1,0 +1,14 @@
+build:
+  gpu: true
+
+  python_version: "3.11"
+
+  python_packages:
+   - "torch==2.2"
+   - "git+https://github.com/initml/diffusers.git@clement/feature/flash_sd3"
+   - "transformers"
+   - "peft"
+   - "numpy<2"
+   - "accelerate"
+
+predict: "predict.py:Predictor"
